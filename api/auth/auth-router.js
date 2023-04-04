@@ -7,7 +7,7 @@ const jwt=require("jsonwebtoken")
 
 router.post("/register", rolAdiGecerlimi, async (req, res, next) => {
   try {
-    const { username, password, role_name } = req.body;
+    const { username, password } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 10);
     const newUser = await Users.ekle({
       username: username,
@@ -76,8 +76,8 @@ router.post("/login", usernameVarmi, async (req, res, next) => {
 
 const generateToken = (user) => {
   const payload = {
-    subject: user.id,
     username: user.username,
+    subject: user.user_id,
     role_name: user.role_name,
   };
 

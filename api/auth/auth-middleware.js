@@ -9,7 +9,7 @@ const sinirli = (req, res, next) => {
       jwt.verify(token, JWT_SECRET, (err, decodedJWT) => {
         if (err) {
           res.status(401).json({
-            message: "Token gereklidir",
+            message: "Token gecersizdir",
           });
         } else {
           req.decodedJWT = decodedJWT;
@@ -18,7 +18,7 @@ const sinirli = (req, res, next) => {
       });
     }else{
       res.status(401).json(  {
-        "message": "Token gecersizdir"
+        "message": "Token gereklidir"
       })
     }
   } catch (error) {
@@ -87,19 +87,26 @@ const usernameVarmi = async (req, res, next) => {
 
 const rolAdiGecerlimi = async (req, res, next) => {
   try {
-    const existRole = await Users.goreBul({ role_name: req.body.role_name });
-    existRole.role_name.trim()
-    if (!existRole || existRole === "") {
+    if(!req.body.role_name){
       req.role_name = "student";
-      next();
-    } else if (existRole.role_name.toLowerCase() === "admin") {
-      res.status(422).json({ messsage: "Rol adı admin olamaz" });
-    } else if (existRole.length > 32) {
-      res.status(422).json({ messsage: "rol adı 32 karakterden fazla olamaz" });
-    } else {
-      req.role_name = existRole.role_name;
+      req.role_id=3
       next();
     }
+    else if(req.body.role_name.length > 32) {
+      res.status(422).json({ messsage: "rol adı 32 karakterden fazla olamaz" });
+    }else{
+    const existRole = await Users.goreBul({ role_name: req.body.role_name });
+    if (!existRole || existRole === "") {
+      req.role_name = req.body.role_name.trim();
+      req.role_id=3
+      next();
+    } else if (existRole.role_name.toLowerCase().trim() === "admin") {
+      res.status(422).json({ messsage: "Rol adı admin olamaz" });
+    }else {
+      req.role_name = existRole.role_name.trim();
+      next();
+    }
+  }
   } catch (error) {
     next(error);
   }
