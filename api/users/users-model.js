@@ -1,6 +1,7 @@
 const db = require('../../data/db-config.js');
 
 function bul() {
+  return db("users as u").join("roles as r","r.role_id","u.role_id")
   /**
     2 tabloyu birleştirmeniz lazım (join)
     Tüm kullanıcılar DİZİSİNİ çözümlemeli
@@ -20,7 +21,9 @@ function bul() {
    */
 }
 
-function goreBul(filtre) {
+async function goreBul(filtre) {
+  let filtered =await db("users as u").join("roles as r","r.role_id","u.role_id").select("*").where(filtre).first()  
+  return filtered
   /**
     2 tabloyu birleştirmeniz gerekiyor
     Filtreyle eşleşen kullanıcıları içeren DİZİYİ çözümlemeli
@@ -37,6 +40,7 @@ function goreBul(filtre) {
 }
 
 function idyeGoreBul(user_id) {
+  return db("users as u").join("roles as r","r.role_id","u.role_id").where("user_id",user_id).first()  
   /**
     2 tabloyu birleştirmeniz gerekiyor
     Verilen id li kullanıcıyı çözümlemeli

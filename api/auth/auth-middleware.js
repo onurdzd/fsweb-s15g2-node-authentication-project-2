@@ -1,4 +1,6 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
+const jwt=require("jsonwebtoken")
+const Users=require("../users/users-model")
 
 const sinirli = (req, res, next) => {
   /*
@@ -33,7 +35,17 @@ const sadece = role_name => (req, res, next) => {
 }
 
 
-const usernameVarmi = (req, res, next) => {
+const usernameVarmi =async (req, res, next) => {
+  try {
+    const existUsername=await Users.goreBul({username:req.body.username})
+    if(!existUsername){
+      res.status(401).json({messsage:"Geçersiz kriter"})
+    }else{
+      next()
+    }
+  } catch (error) {
+    
+  }
   /*
     req.body de verilen username veritabanında yoksa
     status: 401
@@ -44,7 +56,23 @@ const usernameVarmi = (req, res, next) => {
 }
 
 
-const rolAdiGecerlimi = (req, res, next) => {
+const rolAdiGecerlimi = async (req, res, next) => {
+  try {
+    const existRole=await Users.goreBul({role_name:req.body.role_name})
+    if(!existRole || existRole.trim()===""){
+      req.role_name="student"
+      next()
+    }else if(existRole.trim().toLowerCase()==="admin"){
+      res.status(422).json({messsage:"Rol adı admin olamaz"})
+    }else if(existRole.trim().length>32){
+      res.status(422).json({messsage:"rol adı 32 karakterden fazla olamaz"})
+    }else{
+      req.role_name=existRole.trim()
+      next()
+    }
+  } catch (error) {
+    next(error)
+  }
   /*
     Bodydeki role_name geçerliyse, req.role_name öğesini trimleyin ve devam edin.
 
