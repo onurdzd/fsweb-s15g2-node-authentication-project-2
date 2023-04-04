@@ -22,7 +22,7 @@ function bul() {
 }
 
 async function goreBul(filtre) {
-  let filtered =await db("users as u").join("roles as r","r.role_id","u.role_id").select("*").where(filtre).first()  
+  let filtered =await db("users as u").join("roles as r","r.role_id","u.role_id").select("*").where(filtre);
   return filtered
   /**
     2 tabloyu birleştirmeniz gerekiyor

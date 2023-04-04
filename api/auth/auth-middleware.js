@@ -1,6 +1,7 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
 const jwt = require("jsonwebtoken");
 const Users = require("../users/users-model");
+const bcrypt=require("bcryptjs")
 
 const sinirli = (req, res, next) => {
   try {
@@ -52,7 +53,7 @@ const sadece = (role_name) => (req, res, next) => {
       })
     }
   } catch (error) {
-    
+    next(error)
   }
   /*
     
@@ -70,12 +71,17 @@ const sadece = (role_name) => (req, res, next) => {
 const usernameVarmi = async (req, res, next) => {
   try {
     const existUsername = await Users.goreBul({ username: req.body.username });
-    if (!existUsername) {
-      res.status(401).json({ messsage: "Geçersiz kriter" });
+    const isValidLogin=existUsername && existUsername.length>0 && bcrypt.compareSync(req.body.password, existUsername[0].password)
+    if (!isValidLogin) {
+      next({
+        status:401,
+        messsage: "Geçersiz kriter" 
+      })
     } else {
+      req.user = existUsername[0];
       next();
     }
-  } catch (error) {}
+  } catch (error) {next(error)}
   /*
     req.body de verilen username veritabanında yoksa
     status: 401
@@ -87,26 +93,22 @@ const usernameVarmi = async (req, res, next) => {
 
 const rolAdiGecerlimi = async (req, res, next) => {
   try {
-    if(!req.body.role_name){
-      req.role_name = "student";
-      req.role_id=3
-      next();
+    let role_name = req.body.role_name;
+    if(!role_name || role_name.trim()===""){
+      role_name = "student";
+    }else if(role_name.trim().toLowerCase() === "admin"){
+      next({
+        status:422,
+        message:"Rol adı admin olamaz"
+      })
+    }else if(role_name.length > 32) {
+      next({
+        status:422,
+         messsage: "rol adı 32 karakterden fazla olamaz"
+         })
     }
-    else if(req.body.role_name.length > 32) {
-      res.status(422).json({ messsage: "rol adı 32 karakterden fazla olamaz" });
-    }else{
-    const existRole = await Users.goreBul({ role_name: req.body.role_name });
-    if (!existRole || existRole === "") {
-      req.role_name = req.body.role_name.trim();
-      req.role_id=3
-      next();
-    } else if (existRole.role_name.toLowerCase().trim() === "admin") {
-      res.status(422).json({ messsage: "Rol adı admin olamaz" });
-    }else {
-      req.role_name = existRole.role_name.trim();
-      next();
-    }
-  }
+    req.body.role_name = role_name.trim();
+    next();
   } catch (error) {
     next(error);
   }
